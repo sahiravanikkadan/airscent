@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Setup PIN - AAMCO{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-shield-lock"></i> {{ 'Change PIN' if current_user.has_pin() else 'Setup PIN' }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Set a 4-6 digit PIN. This PIN is required to confirm any data entry or modification.</p>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Enter PIN <span class="text-danger">*</span></label>
+                        <input type="password" name="pin" class="form-control text-center fw-bold" 
+                               maxlength="6" minlength="4" pattern="\d{4,6}" inputmode="numeric"
+                               placeholder="●●●●" required autofocus style="font-size: 1.5rem; letter-spacing: 10px;">
+                        <small class="text-muted">4-6 digits only</small>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Confirm PIN <span class="text-danger">*</span></label>
+                        <input type="password" name="confirm_pin" class="form-control text-center fw-bold"
+                               maxlength="6" minlength="4" pattern="\d{4,6}" inputmode="numeric"
+                               placeholder="●●●●" required style="font-size: 1.5rem; letter-spacing: 10px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-shield-check"></i> {{ 'Change PIN' if current_user.has_pin() else 'Set PIN' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Task' if task else 'New Task' }} - TaskFlow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-{{ 'pencil' if task else 'plus-lg' }}"></i>
+                    {{ 'Edit Task' if task else 'Add New Task' }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" value="{{ task.title if task else '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3">{{ task.description if task else '' }}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Assign To</label>
+                            <select name="assigned_to" class="form-select">
+                                <option value="">-- Unassigned --</option>
+                                {% for u in users %}
+                                <option value="{{ u.id }}" {{ 'selected' if task and task.assigned_to == u.id }}>{{ u.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Group</label>
+                            <select name="group_id" class="form-select">
+                                <option value="">-- No Group --</option>
+                                {% for g in groups %}
+                                <option value="{{ g.id }}" {{ 'selected' if task and task.group_id == g.id }}>{{ g.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Priority</label>
+                            <select name="priority" class="form-select">
+                                <option value="low" {{ 'selected' if task and task.priority == 'low' }}>Low</option>
+                                <option value="medium" {{ 'selected' if (not task) or (task and task.priority == 'medium') }}>Medium</option>
+                                <option value="high" {{ 'selected' if task and task.priority == 'high' }}>High</option>
+                            </select>
+                        </div>
+                        {% if task %}
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="pending" {{ 'selected' if task.status == 'pending' }}>Pending</option>
+                                <option value="accepted" {{ 'selected' if task.status == 'accepted' }}>Accepted</option>
+                                <option value="in_progress" {{ 'selected' if task.status == 'in_progress' }}>In Progress</option>
+                                <option value="completed" {{ 'selected' if task.status == 'completed' }}>Completed</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ 'Update' if task else 'Add Task' }}</button>
+                        <a href="{{ url_for('tasks') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

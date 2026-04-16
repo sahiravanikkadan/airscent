@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Print Settings - AAMCO{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-printer"></i> Print Settings</h4>
+    <div>
+        <a href="{{ url_for('role_settings') }}" class="btn btn-outline-primary"><i class="bi bi-shield-check"></i> Roles</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-ruled"></i> Paper & Layout</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Paper Size</label>
+                        <select name="print_paper_size" class="form-select">
+                            <option value="A4" {{ 'selected' if settings.get('print_paper_size') == 'A4' }}>A4 (210 x 297 mm)</option>
+                            <option value="A5" {{ 'selected' if settings.get('print_paper_size') == 'A5' }}>A5 (148 x 210 mm)</option>
+                            <option value="Letter" {{ 'selected' if settings.get('print_paper_size') == 'Letter' }}>Letter (8.5 x 11 in)</option>
+                            <option value="Legal" {{ 'selected' if settings.get('print_paper_size') == 'Legal' }}>Legal (8.5 x 14 in)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Orientation</label>
+                        <select name="print_orientation" class="form-select">
+                            <option value="portrait" {{ 'selected' if settings.get('print_orientation') == 'portrait' }}>Portrait</option>
+                            <option value="landscape" {{ 'selected' if settings.get('print_orientation') == 'landscape' }}>Landscape</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Company Name (Print Header)</label>
+                        <input type="text" name="print_company_name" class="form-control"
+                               value="{{ settings.get('print_company_name', 'AIRSCENT ARABIA MANUFACTURING CO.') }}">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="print_show_logo" id="printShowLogo"
+                                   {{ 'checked' if settings.get('print_show_logo', '1') == '1' }}>
+                            <label class="form-check-label" for="printShowLogo">Show Logo in Print Header</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-eye"></i> Print Preview</h6>
+            </div>
+            <div class="card-body bg-light text-center py-4">
+                <div class="border bg-white mx-auto p-3" style="width:200px;min-height:260px;font-size:0.65rem;">
+                    {% if settings.get('print_show_logo', '1') == '1' %}
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="max-width:60px;" class="mb-1">
+                    {% endif %}
+                    <div class="fw-bold" style="font-size:0.55rem;">{{ settings.get('print_company_name', 'AIRSCENT ARABIA MANUFACTURING CO.') }}</div>
+                    <hr style="margin:4px 0;">
+                    <div class="text-muted" style="font-size:0.5rem;">
+                        <div class="mb-1">Report Title</div>
+                        <table class="w-100" style="font-size:0.45rem;">
+                            <tr><td class="border px-1">Col 1</td><td class="border px-1">Col 2</td><td class="border px-1">Col 3</td></tr>
+                            <tr><td class="border px-1">Data</td><td class="border px-1">Data</td><td class="border px-1">Data</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    {{ settings.get('print_paper_size', 'A4') }} - {{ settings.get('print_orientation', 'portrait') | title }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

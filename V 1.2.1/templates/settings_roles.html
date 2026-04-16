@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Roles & Permissions - AAMCO{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-shield-check"></i> Roles &amp; Permissions</h4>
+    <div>
+        <a href="{{ url_for('print_settings') }}" class="btn btn-outline-primary"><i class="bi bi-printer"></i> Print Settings</a>
+    </div>
+</div>
+
+<!-- Role Descriptions -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-4 border-danger">
+            <div class="card-body">
+                <h6 class="fw-bold"><span class="badge bg-danger me-2">Super Admin</span></h6>
+                <ul class="small mb-0 ps-3">
+                    <li>Full system access</li>
+                    <li>Create, edit &amp; delete users</li>
+                    <li>Manage all tasks &amp; deliveries</li>
+                    <li>View logs &amp; settings</li>
+                    <li>Toggle user activation</li>
+                    <li>Upload profile pictures</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-4 border-primary">
+            <div class="card-body">
+                <h6 class="fw-bold"><span class="badge bg-primary me-2">Admin</span></h6>
+                <ul class="small mb-0 ps-3">
+                    <li>View all tasks &amp; deliveries</li>
+                    <li>Create, edit &amp; delete tasks</li>
+                    <li>Create, edit &amp; delete deliveries</li>
+                    <li>View logs &amp; settings</li>
+                    <li>Delete delivery persons</li>
+                    <li>Cannot manage users</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-4 border-secondary">
+            <div class="card-body">
+                <h6 class="fw-bold"><span class="badge bg-secondary me-2">User</span></h6>
+                <ul class="small mb-0 ps-3">
+                    <li>View assigned tasks only</li>
+                    <li>Accept &amp; start tasks</li>
+                    <li>Create &amp; edit deliveries</li>
+                    <li>Manage delivery persons</li>
+                    <li>Send &amp; receive messages</li>
+                    <li>Cannot view logs or settings</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Permission Matrix -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-table"></i> Permission Matrix</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Permission</th>
+                        <th class="text-center"><span class="badge bg-danger">Super Admin</span></th>
+                        <th class="text-center"><span class="badge bg-primary">Admin</span></th>
+                        <th class="text-center"><span class="badge bg-secondary">User</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set perms = [
+                        ('View Dashboard', true, true, true),
+                        ('View All Tasks', true, true, false),
+                        ('View Own Tasks', true, true, true),
+                        ('Create Tasks', true, true, true),
+                        ('Edit Tasks', true, true, true),
+                        ('Delete Tasks', true, true, false),
+                        ('Accept/Start Tasks', true, true, true),
+                        ('View Deliveries', true, true, true),
+                        ('Create/Edit Deliveries', true, true, true),
+                        ('Delete Deliveries', true, true, false),
+                        ('Manage Drivers', true, true, true),
+                        ('Delete Drivers', true, true, false),
+                        ('View Users', true, true, false),
+                        ('Create/Edit Users', true, false, false),
+                        ('Toggle User Status', true, false, false),
+                        ('View Activity Logs', true, true, false),
+                        ('Messages', true, true, true),
+                        ('Notifications', true, true, true),
+                        ('Settings', true, true, false),
+                        ('Export to Excel', true, true, true),
+                        ('Print', true, true, true),
+                    ] %}
+                    {% for perm, sa, admin, user in perms %}
+                    <tr>
+                        <td>{{ perm }}</td>
+                        <td class="text-center">
+                            {% if sa %}<i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if admin %}<i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if user %}<i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Users by Role -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-people"></i> Users by Role</h6>
+        {% if current_user.is_super_admin() %}
+        <a href="{{ url_for('add_user') }}" class="btn btn-sm btn-primary"><i class="bi bi-person-plus"></i> Add User</a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td><strong>{{ u.full_name }}</strong></td>
+                        <td>{{ u.username }}</td>
+                        <td>
+                            {% if u.role == 'super_admin' %}
+                                <span class="badge bg-danger">Super Admin</span>
+                            {% elif u.role == 'admin' %}
+                                <span class="badge bg-primary">Admin</span>
+                            {% else %}
+                                <span class="badge bg-secondary">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_active %}<span class="badge bg-success">Active</span>
+                            {% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if current_user.is_super_admin() %}
+                            <a href="{{ url_for('edit_user', user_id=u.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

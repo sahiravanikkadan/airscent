@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Delivery Persons - AAMCO{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-person-badge"></i> Delivery Persons</h4>
+    <a href="{{ url_for('add_delivery_person') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Delivery Person</a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Iqama ID</th>
+                        <th>Vehicle No</th>
+                        <th>Status</th>
+                        <th>Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in persons %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td><strong>{{ p.name }}</strong></td>
+                        <td>{{ p.mobile or '-' }}</td>
+                        <td>{{ p.iqama_id or '-' }}</td>
+                        <td>{{ p.vehicle_no or '-' }}</td>
+                        <td>
+                            {% if p.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ p.created_at[:10] if p.created_at else '-' }}</td>
+                        <td class="text-nowrap">
+                            {% if p.mobile %}
+                            <a href="https://wa.me/{{ p.mobile | replace(' ', '') | replace('+', '') | replace('-', '') }}" target="_blank"
+                               class="btn btn-sm btn-outline-success" title="WhatsApp Chat">
+                                <i class="bi bi-whatsapp"></i>
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('edit_delivery_person', person_id=p.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if current_user.is_admin() %}
+                            <a href="{{ url_for('delete_delivery_person', person_id=p.id) }}" class="btn btn-sm btn-outline-danger"
+                               title="Delete" onclick="return confirm('Delete this delivery person?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="text-center text-muted py-4">No delivery persons found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

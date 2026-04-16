@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Delivery Person' if person else 'New Delivery Person' }} - AAMCO{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-{{ 'pencil' if person else 'person-plus' }}"></i>
+                    {{ 'Edit Delivery Person' if person else 'Add Delivery Person' }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control"
+                               value="{{ person.name if person else '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mobile</label>
+                        <input type="text" name="mobile" class="form-control"
+                               value="{{ person.mobile if person else '' }}" placeholder="e.g. 05XXXXXXXX">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Iqama ID</label>
+                        <input type="text" name="iqama_id" class="form-control"
+                               value="{{ person.iqama_id if person else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Vehicle No</label>
+                        <input type="text" name="vehicle_no" class="form-control"
+                               value="{{ person.vehicle_no if person else '' }}">
+                    </div>
+                    {% if person %}
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="isActive"
+                                   {{ 'checked' if person.is_active }}>
+                            <label class="form-check-label" for="isActive">Active</label>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> {{ 'Update' if person else 'Add' }}
+                        </button>
+                        <a href="{{ url_for('delivery_persons') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Notifications - AAMCO{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-bell"></i> Notifications</h4>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        {% for n in notifications %}
+        <div class="card border-0 shadow-sm mb-2 {{ 'border-start border-4 border-primary' if not n.is_read }}">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="d-flex align-items-center mb-1">
+                            {% if n.type == 'task_assigned' %}
+                                <span class="badge bg-primary me-2"><i class="bi bi-clipboard-plus"></i> Task Assigned</span>
+                            {% elif n.type == 'reminder' %}
+                                <span class="badge bg-warning text-dark me-2"><i class="bi bi-alarm"></i> Reminder</span>
+                            {% else %}
+                                <span class="badge bg-info me-2"><i class="bi bi-info-circle"></i> Info</span>
+                            {% endif %}
+                            <strong>{{ n.title }}</strong>
+                            {% if not n.is_read %}
+                            <span class="badge bg-danger ms-2" style="font-size:0.6rem;">NEW</span>
+                            {% endif %}
+                        </div>
+                        <p class="mb-0 text-muted">{{ n.message }}</p>
+                    </div>
+                    <div class="text-end text-nowrap">
+                        <small class="text-muted">{{ n.created_at[:16] if n.created_at else '' }}</small>
+                        {% if n.link %}
+                        <br><a href="{{ n.link }}" class="btn btn-sm btn-outline-primary mt-1"><i class="bi bi-arrow-right"></i> View</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center text-muted py-5">
+                <i class="bi bi-bell-slash" style="font-size:2rem;"></i>
+                <p class="mt-2 mb-0">No notifications yet</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

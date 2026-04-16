@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Deliveries - TaskFlow{% endblock %}
+{% block content %}
+<div class="print-header">
+    {% if app_settings.get('print_show_logo', '1') == '1' %}
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    {% endif %}
+    <h5>{{ app_settings.get('print_company_name', 'AIRSCENT ARABIA MANUFACTURING CO.') }}</h5>
+    <div class="text-muted" style="font-size:9pt;">Delivery List — Printed: {{ now().strftime('%Y-%m-%d %H:%M') if now is defined else '' }}</div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-truck"></i> Delivery Tracking</h4>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> Print</button>
+        <a href="{{ url_for('export_deliveries', payment=payment_filter, note_status=note_filter, dn_search=dn_search, driver=driver_filter) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Export</a>
+        <a href="{{ url_for('add_delivery') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Delivery</a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Delivery Note #</label>
+                <input type="text" name="dn_search" class="form-control" placeholder="Search note number..."
+                       value="{{ dn_search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Driver</label>
+                <select name="driver" class="form-select">
+                    <option value="">All Drivers</option>
+                    {% for dr in drivers %}
+                    <option value="{{ dr.id }}" {{ 'selected' if driver_filter == dr.id|string }}>{{ dr.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Payment Status</label>
+                <select name="payment" class="form-select">
+                    <option value="">All</option>
+                    <option value="paid" {{ 'selected' if payment_filter == 'paid' }}>Paid</option>
+                    <option value="unpaid" {{ 'selected' if payment_filter == 'unpaid' }}>Unpaid</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Signed Note</label>
+                <select name="note_status" class="form-select">
+                    <option value="">All</option>
+                    <option value="received" {{ 'selected' if note_filter == 'received' }}>Received</option>
+                    <option value="pending" {{ 'selected' if note_filter == 'pending' }}>Pending</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-funnel"></i></button>
+            </div>
+            <div class="col-md-1">
+                <a href="{{ url_for('deliveries') }}" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delivery Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Note #</th>
+                        <th>Customer</th>
+                        <th>Delivery Person</th>
+                        <th>Delivery Date</th>
+                        <th>Transport Charge</th>
+                        <th>Payment</th>
+                        <th>Method</th>
+                        <th>Paid Date</th>
+                        <th>Paid By</th>
+                        <th>Signed Note</th>
+                        <th>Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in deliveries %}
+                    <tr>
+                        <td><strong>{{ d.delivery_note_number }}</strong></td>
+                        <td>{{ d.customer_name }}</td>
+                        <td>{{ d.driver_name or '-' }}<br><small class="text-muted">{{ d.driver_vehicle or '' }}</small></td>
+                        <td>{{ d.delivery_date or '-' }}</td>
+                        <td>{{ '%.2f' | format(d.transportation_charge) if d.transportation_charge else '-' }}</td>
+                        <td>
+                            {% if d.charge_paid %}
+                                <span class="badge bg-success">Paid</span>
+                            {% elif d.transportation_charge > 0 %}
+                                <span class="badge bg-danger">Unpaid</span>
+                            {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ d.payment_method | replace('_', ' ') | title if d.payment_method else '-' }}</td>
+                        <td>{{ d.paid_date or '-' }}</td>
+                        <td>{{ d.paid_by or '-' }}</td>
+                        <td>
+                            {% if d.signed_note_status == 'received' %}
+                                <span class="badge bg-success">Received</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% if d.driver_name %}
+                                <a href="https://wa.me/{{ d.driver_mobile | default('', true) | replace(' ', '') | replace('+', '') | replace('-', '') }}?text={{ ('Hi ' + d.driver_name + ', please submit the signed delivery note for DN# ' + d.delivery_note_number + ' (' + d.customer_name + '). Thank you.') | urlencode }}"
+                                   target="_blank" class="btn btn-sm btn-outline-success ms-1" title="Send WhatsApp reminder to driver">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ d.created_at[:10] if d.created_at else '-' }}</td>
+                        <td class="text-nowrap">
+                            <a href="{{ url_for('edit_delivery', delivery_id=d.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if current_user.is_admin() %}
+                            <a href="{{ url_for('delete_delivery', delivery_id=d.id) }}" class="btn btn-sm btn-outline-danger"
+                               title="Delete" onclick="return confirm('Delete this delivery?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="12" class="text-center text-muted py-4">No deliveries found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Tasks - TaskFlow{% endblock %}
+{% block content %}
+<div class="print-header">
+    {% if app_settings.get('print_show_logo', '1') == '1' %}
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    {% endif %}
+    <h5>{{ app_settings.get('print_company_name', 'AIRSCENT ARABIA MANUFACTURING CO.') }}</h5>
+    <div class="text-muted" style="font-size:9pt;">Task List — Printed: {{ now().strftime('%Y-%m-%d %H:%M') if now is defined else '' }}</div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-list-task"></i> Tasks</h4>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> Print</button>
+        <a href="{{ url_for('export_tasks', status=status_filter, priority=priority_filter, user=user_filter) }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Export</a>
+        <a href="{{ url_for('add_task') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Task</a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="pending" {{ 'selected' if status_filter == 'pending' }}>Pending</option>
+                    <option value="accepted" {{ 'selected' if status_filter == 'accepted' }}>Accepted</option>
+                    <option value="in_progress" {{ 'selected' if status_filter == 'in_progress' }}>In Progress</option>
+                    <option value="completed" {{ 'selected' if status_filter == 'completed' }}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    <option value="high" {{ 'selected' if priority_filter == 'high' }}>High</option>
+                    <option value="medium" {{ 'selected' if priority_filter == 'medium' }}>Medium</option>
+                    <option value="low" {{ 'selected' if priority_filter == 'low' }}>Low</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Group</label>
+                <select name="group" class="form-select">
+                    <option value="">All Groups</option>
+                    {% for g in groups %}
+                    <option value="{{ g.id }}" {{ 'selected' if group_filter == g.id|string }}>{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if current_user.is_admin() %}
+            <div class="col-md-2">
+                <label class="form-label">Assigned To</label>
+                <select name="user" class="form-select">
+                    <option value="">All Users</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}" {{ 'selected' if user_filter == u.id|string }}>{{ u.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-funnel"></i></button>
+            </div>
+            <div class="col-md-1">
+                <a href="{{ url_for('tasks') }}" class="btn btn-outline-secondary w-100"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Task Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Group</th>
+                        <th>Assigned To</th>
+                        <th>Created By</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Added</th>
+                        <th>Accepted</th>
+                        <th>Started</th>
+                        <th>Completed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.id }}</td>
+                        <td><strong>{{ task.title }}</strong></td>
+                        <td>
+                            {% if task.group_name %}
+                            <span class="badge" style="background-color:{{ task.group_color or '#6c757d' }};">{{ task.group_name }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ task.assigned_name or 'Unassigned' }}</td>
+                        <td>{{ task.creator_name }}</td>
+                        <td>
+                            {% if task.priority == 'high' %}
+                                <span class="badge bg-danger">High</span>
+                            {% elif task.priority == 'medium' %}
+                                <span class="badge bg-warning text-dark">Medium</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Low</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                            {% elif task.status == 'in_progress' %}
+                                <span class="badge bg-info">In Progress</span>
+                            {% elif task.status == 'accepted' %}
+                                <span class="badge bg-primary">Accepted</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ task.created_at[:10] if task.created_at else '-' }}</td>
+                        <td>{{ task.accepted_at[:16] if task.accepted_at else '-' }}</td>
+                        <td>{{ task.started_at[:16] if task.started_at else '-' }}</td>
+                        <td>{{ task.completed_at[:10] if task.completed_at else '-' }}</td>
+                        <td class="text-nowrap">
+                            {% if task.assigned_to == current_user.id and task.status == 'pending' %}
+                            <a href="{{ url_for('accept_task', task_id=task.id) }}" class="btn btn-sm btn-outline-success" title="Accept Task">
+                                <i class="bi bi-check2-circle"></i> Accept
+                            </a>
+                            {% endif %}
+                            {% if task.assigned_to == current_user.id and task.status in ('pending', 'accepted') %}
+                            <a href="{{ url_for('start_task', task_id=task.id) }}" class="btn btn-sm btn-outline-info" title="Start Working">
+                                <i class="bi bi-play-circle"></i> Start
+                            </a>
+                            {% endif %}
+                            {% if task.assigned_phone and task.assigned_to %}
+                            <a href="https://wa.me/{{ task.assigned_phone | replace(' ', '') | replace('+', '') | replace('-', '') }}?text={{ ('Task Update: *' + task.title + '*\nStatus: ' + task.status | replace('_', ' ') | title + '\nPriority: ' + task.priority | title + '\nFrom: ' + current_user.full_name) | urlencode }}"
+                               target="_blank" class="btn btn-sm btn-outline-success" title="WhatsApp task status">
+                                <i class="bi bi-whatsapp"></i>
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if task.status != 'completed' and task.assigned_to %}
+                            <a href="{{ url_for('send_task_reminder', task_id=task.id) }}" class="btn btn-sm btn-outline-warning"
+                               title="Send Reminder" onclick="return confirm('Send urgent reminder for this task?')">
+                                <i class="bi bi-bell"></i>
+                            </a>
+                            {% endif %}
+                            {% if current_user.is_admin() %}
+                            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="btn btn-sm btn-outline-danger"
+                               title="Delete" onclick="return confirm('Delete this task?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="12" class="text-center text-muted py-4">No tasks found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

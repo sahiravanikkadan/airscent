@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Delivery' if delivery else 'New Delivery' }} - TaskFlow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-{{ 'pencil' if delivery else 'plus-lg' }}"></i>
+                    {{ 'Edit Delivery' if delivery else 'Add New Delivery' }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Delivery Note Number <span class="text-danger">*</span></label>
+                            <input type="text" name="delivery_note_number" class="form-control"
+                                   value="{{ delivery.delivery_note_number if delivery else '' }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Customer Name <span class="text-danger">*</span></label>
+                            <input type="text" name="customer_name" class="form-control"
+                                   value="{{ delivery.customer_name if delivery else '' }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Delivery Date</label>
+                            <input type="date" name="delivery_date" class="form-control"
+                                   value="{{ delivery.delivery_date if delivery else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Delivery Person</label>
+                            <select name="delivery_person_id" class="form-select">
+                                <option value="">-- Select Delivery Person --</option>
+                                {% for p in persons %}
+                                <option value="{{ p.id }}" {{ 'selected' if delivery and delivery.delivery_person_id == p.id }}>
+                                    {{ p.name }} — {{ p.vehicle_no or 'No Vehicle' }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="1">{{ delivery.description if delivery else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="text-muted mb-3"><i class="bi bi-cash-stack"></i> Transportation & Payment</h6>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Transportation Charge</label>
+                            <input type="number" step="0.01" name="transportation_charge" class="form-control" id="transportCharge"
+                                   value="{{ delivery.transportation_charge if delivery else '0' }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Charge Paid?</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" name="charge_paid" id="chargePaid"
+                                       {{ 'checked' if delivery and delivery.charge_paid }}>
+                                <label class="form-check-label" for="chargePaid">Yes, Paid</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Payment Method <span class="text-danger payment-required d-none">*</span></label>
+                            <select name="payment_method" class="form-select" id="paymentMethod">
+                                <option value="">-- Select --</option>
+                                <option value="cash" {{ 'selected' if delivery and delivery.payment_method == 'cash' }}>Cash</option>
+                                <option value="bank_transfer" {{ 'selected' if delivery and delivery.payment_method == 'bank_transfer' }}>Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Paid Date</label>
+                            <input type="date" name="paid_date" class="form-control" id="paidDate"
+                                   value="{{ delivery.paid_date if delivery else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Paid By</label>
+                            <select name="paid_by" class="form-select" id="paidBy">
+                                <option value="">-- Select User --</option>
+                                {% for u in users %}
+                                <option value="{{ u.full_name }}" {{ 'selected' if delivery and delivery.paid_by == u.full_name }}>{{ u.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Signed Delivery Note</label>
+                            <select name="signed_note_status" class="form-select">
+                                <option value="pending" {{ 'selected' if not delivery or delivery.signed_note_status == 'pending' }}>Pending to Receive</option>
+                                <option value="received" {{ 'selected' if delivery and delivery.signed_note_status == 'received' }}>Received</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Payment Narration / Notes</label>
+                        <textarea name="narration" class="form-control" rows="3"
+                                  placeholder="Add any payment notes or narration here...">{{ delivery.narration if delivery else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> {{ 'Update' if delivery else 'Add Delivery' }}
+                        </button>
+                        <a href="{{ url_for('deliveries') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chargePaid = document.getElementById('chargePaid');
+    const paidDate = document.getElementById('paidDate');
+    const paidBy = document.getElementById('paidBy');
+    const paymentMethod = document.getElementById('paymentMethod');
+    const reqMarkers = document.querySelectorAll('.payment-required');
+
+    function togglePaymentFields() {
+        if (chargePaid.checked) {
+            reqMarkers.forEach(m => m.classList.remove('d-none'));
+            if (!paidDate.value) {
+                paidDate.value = new Date().toISOString().split('T')[0];
+            }
+            if (!paidBy.value) {
+                // Auto-select current user
+                const currentUser = '{{ current_user.full_name }}';
+                for (let opt of paidBy.options) {
+                    if (opt.value === currentUser) { opt.selected = true; break; }
+                }
+            }
+        } else {
+            reqMarkers.forEach(m => m.classList.add('d-none'));
+        }
+    }
+
+    chargePaid.addEventListener('change', togglePaymentFields);
+    togglePaymentFields();
+});
+</script>
+{% endblock %}

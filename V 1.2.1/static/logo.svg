@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120">
+  <!-- Letter 'a' (first) -->
+  <path d="M10,95 C10,115 25,120 45,120 L65,120 C80,120 90,112 90,95 L90,55 C90,28 75,15 50,15 C25,15 10,28 10,55 Z M50,42 C62,42 65,50 65,58 L65,95 L45,95 L45,58 C45,50 42,42 50,42 Z" fill="#4B7BF5"/>
+  <!-- Dot between first 'a' and second 'a' — built into the letter counters -->
+  <!-- Actually recreating the exact rounded style -->
+  
+  <!-- Simplified accurate recreation -->
+  <!-- a -->
+  <rect x="5" y="15" width="85" height="105" rx="30" fill="#4B7BF5"/>
+  <ellipse cx="47" cy="78" rx="18" ry="18" fill="white"/>
+  
+  <!-- a -->
+  <rect x="100" y="15" width="85" height="105" rx="30" fill="#4B7BF5"/>
+  <ellipse cx="142" cy="78" rx="18" ry="18" fill="white"/>
+  
+  <!-- dot between a and m -->
+  <circle cx="197" cy="110" r="8" fill="#4B7BF5"/>
+  
+  <!-- m -->
+  <path d="M210,120 L210,50 C210,28 225,15 245,15 C258,15 268,22 272,33 C276,22 286,15 299,15 C319,15 334,28 334,50 L334,120 L310,120 L310,55 C310,45 305,40 299,40 C293,40 288,45 288,55 L288,120 L264,120 L264,55 C264,45 259,40 253,40 C247,40 242,45 242,55 L242,120 Z" fill="#4B7BF5"/>
+  
+  <!-- dot between m and c -->  
+  <circle cx="347" cy="110" r="8" fill="#4B7BF5"/>
+  
+  <!-- c -->
+  <rect x="360" y="15" width="85" height="105" rx="30" fill="#4B7BF5"/>
+  <ellipse cx="402" cy="65" rx="18" ry="18" fill="white"/>
+  <rect x="405" y="47" width="45" height="36" fill="#4B7BF5"/>
+  
+  <!-- o -->
+  <rect x="455" y="15" width="85" height="105" rx="42" fill="#4B7BF5"/>
+  <ellipse cx="497" cy="67" rx="18" ry="18" fill="white"/>
+</svg>

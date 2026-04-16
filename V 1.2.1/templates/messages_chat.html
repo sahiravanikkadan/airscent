@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other_user.full_name }} - AAMCO{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Chat Header -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body py-2">
+                <div class="d-flex align-items-center">
+                    <a href="{{ url_for('messages_inbox') }}" class="btn btn-sm btn-outline-secondary me-3">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    {% if other_user.profile_pic %}
+                    <img src="{{ url_for('static', filename='uploads/' + other_user.profile_pic) }}" alt=""
+                         class="rounded-circle me-2" style="width:36px;height:36px;object-fit:cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-2"
+                         style="width:36px;height:36px;font-size:1rem;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <strong>{{ other_user.full_name }}</strong>
+                        <span class="badge bg-light text-muted ms-1" style="font-size:0.65rem;">{{ other_user.role | replace('_', ' ') | title }}</span>
+                    </div>
+                    <div class="ms-auto">
+                        <form method="POST" action="{{ url_for('clear_messages', user_id=other_user.id) }}" class="d-inline"
+                              onsubmit="return confirm('Clear all your sent messages in this conversation?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Clear my messages">
+                                <i class="bi bi-trash3"></i> Clear My Messages
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body" id="chatBox" style="height:450px;overflow-y:auto;background:#f8f9fa;">
+                {% for msg in chat %}
+                <div class="d-flex mb-3 {{ 'justify-content-end' if msg.sender_id == current_user.id else 'justify-content-start' }}" data-msg-id="{{ msg.id }}">
+                    <div class="p-2 px-3 rounded-3 {{ 'bg-primary text-white' if msg.sender_id == current_user.id else 'bg-white shadow-sm' }}"
+                         style="max-width:75%;word-wrap:break-word;">
+                        {% if msg.sender_id != current_user.id %}
+                        <small class="fw-bold d-block mb-1" style="font-size:0.7rem;">{{ msg.sender_name }}</small>
+                        {% endif %}
+                        {% if msg.message %}
+                        <div>{{ msg.message }}</div>
+                        {% endif %}
+                        {% if msg.attachment %}
+                        <div class="mt-1">
+                            {% set ext = msg.attachment.rsplit('.', 1)[1]|lower if '.' in msg.attachment else '' %}
+                            {% if ext in ('png', 'jpg', 'jpeg', 'gif', 'webp') %}
+                            <a href="{{ url_for('static', filename='uploads/' + msg.attachment) }}" target="_blank">
+                                <img src="{{ url_for('static', filename='uploads/' + msg.attachment) }}"
+                                     class="rounded" style="max-width:200px;max-height:150px;" alt="Attachment">
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('static', filename='uploads/' + msg.attachment) }}" target="_blank"
+                               class="btn btn-sm {{ 'btn-light' if msg.sender_id == current_user.id else 'btn-outline-primary' }}">
+                                <i class="bi bi-file-earmark-arrow-down"></i> {{ msg.attachment.split('_', 3)[-1] if '_' in msg.attachment else msg.attachment }}
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <small class="{{ 'text-white-50' if msg.sender_id == current_user.id else 'text-muted' }} d-block text-end" style="font-size:0.65rem;">
+                            {{ msg.created_at[11:16] if msg.created_at and msg.created_at|length > 16 else msg.created_at }}
+                            {% if msg.sender_id == current_user.id %}
+                            <a href="#" class="delete-msg-btn {{ 'text-white-50' if msg.sender_id == current_user.id else 'text-danger' }}" data-msg-id="{{ msg.id }}" title="Delete" style="text-decoration:none;">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+                <div id="emptyMsg" class="text-center text-muted py-5 {{ 'd-none' if chat }}">
+                    <i class="bi bi-chat-square-text" style="font-size:2rem;"></i>
+                    <p class="mt-2">No messages yet. Say hello!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Send Message Form -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-2">
+                <form id="chatForm" enctype="multipart/form-data">
+                    <div class="d-flex align-items-end gap-2">
+                        <div class="flex-grow-1">
+                            <textarea name="message" class="form-control" rows="2" placeholder="Type a message..."
+                                      style="resize:none;" id="msgInput"></textarea>
+                        </div>
+                        <div>
+                            <label for="attachInput" class="btn btn-outline-secondary" title="Attach file">
+                                <i class="bi bi-paperclip"></i>
+                            </label>
+                            <input type="file" name="attachment" id="attachInput" class="d-none"
+                                   accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip">
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary" id="sendBtn">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="attachPreview" class="mt-1 d-none">
+                        <small class="text-muted"><i class="bi bi-paperclip"></i> <span id="attachName"></span>
+                        <a href="#" id="attachRemove" class="text-danger ms-1"><i class="bi bi-x-circle"></i></a></small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const chatBox = document.getElementById('chatBox');
+    const currentUserId = {{ current_user.id }};
+    const otherUserId = {{ other_user.id }};
+    const uploadsUrl = '{{ url_for("static", filename="uploads") }}';
+    const pollUrl = '/messages/' + otherUserId + '/new';
+    const sendUrl = '/messages/' + otherUserId + '/send-ajax';
+    const deleteUrl = '/messages/' + otherUserId + '/delete/';
+    const imageExts = ['png','jpg','jpeg','gif','webp'];
+
+    // Track last message ID
+    let lastMsgId = 0;
+    document.querySelectorAll('[data-msg-id]').forEach(el => {
+        const id = parseInt(el.dataset.msgId);
+        if (id > lastMsgId) lastMsgId = id;
+    });
+
+    // Scroll to bottom
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Build message bubble HTML
+    function buildBubble(msg) {
+        const isMine = msg.sender_id === currentUserId;
+        let html = '<div class="d-flex mb-3 ' + (isMine ? 'justify-content-end' : 'justify-content-start') + '" data-msg-id="' + msg.id + '">';
+        html += '<div class="p-2 px-3 rounded-3 ' + (isMine ? 'bg-primary text-white' : 'bg-white shadow-sm') + '" style="max-width:75%;word-wrap:break-word;">';
+        if (!isMine) {
+            html += '<small class="fw-bold d-block mb-1" style="font-size:0.7rem;">' + escapeHtml(msg.sender_name) + '</small>';
+        }
+        if (msg.message) {
+            html += '<div>' + escapeHtml(msg.message) + '</div>';
+        }
+        if (msg.attachment) {
+            const ext = msg.attachment.includes('.') ? msg.attachment.split('.').pop().toLowerCase() : '';
+            html += '<div class="mt-1">';
+            if (imageExts.includes(ext)) {
+                html += '<a href="' + uploadsUrl + '/' + msg.attachment + '" target="_blank">';
+                html += '<img src="' + uploadsUrl + '/' + msg.attachment + '" class="rounded" style="max-width:200px;max-height:150px;" alt="Attachment">';
+                html += '</a>';
+            } else {
+                const displayName = msg.attachment.includes('_') ? msg.attachment.split('_').slice(3).join('_') : msg.attachment;
+                html += '<a href="' + uploadsUrl + '/' + msg.attachment + '" target="_blank" class="btn btn-sm ' + (isMine ? 'btn-light' : 'btn-outline-primary') + '">';
+                html += '<i class="bi bi-file-earmark-arrow-down"></i> ' + escapeHtml(displayName) + '</a>';
+            }
+            html += '</div>';
+        }
+        const time = msg.created_at.length > 16 ? msg.created_at.substring(11, 16) : msg.created_at;
+        html += '<small class="' + (isMine ? 'text-white-50' : 'text-muted') + ' d-block text-end" style="font-size:0.65rem;">' + time;
+        if (isMine) {
+            html += ' <a href="#" class="delete-msg-btn ' + (isMine ? 'text-white-50' : 'text-danger') + '" data-msg-id="' + msg.id + '" title="Delete" style="text-decoration:none;"><i class="bi bi-trash3"></i></a>';
+        }
+        html += '</small>';
+        html += '</div></div>';
+        return html;
+    }
+
+    function escapeHtml(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    // Poll for new messages
+    function pollMessages() {
+        fetch(pollUrl + '?after=' + lastMsgId)
+            .then(r => r.json())
+            .then(msgs => {
+                if (msgs.length > 0) {
+                    const emptyMsg = document.getElementById('emptyMsg');
+                    if (emptyMsg) emptyMsg.classList.add('d-none');
+                    const wasAtBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 80;
+                    msgs.forEach(msg => {
+                        if (msg.id > lastMsgId) {
+                            chatBox.insertAdjacentHTML('beforeend', buildBubble(msg));
+                            lastMsgId = msg.id;
+                        }
+                    });
+                    if (wasAtBottom) chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            })
+            .catch(() => {});
+    }
+    setInterval(pollMessages, 2000);
+
+    // AJAX send
+    const chatForm = document.getElementById('chatForm');
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(chatForm);
+        const msgInput = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const attachInput = document.getElementById('attachInput');
+
+        if (!msgInput.value.trim() && (!attachInput.files || !attachInput.files.length)) return;
+
+        sendBtn.disabled = true;
+        fetch(sendUrl, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                sendBtn.disabled = false;
+                if (data.ok) {
+                    msgInput.value = '';
+                    attachInput.value = '';
+                    document.getElementById('attachPreview').classList.add('d-none');
+                    pollMessages(); // Fetch immediately
+                }
+            })
+            .catch(() => { sendBtn.disabled = false; });
+    });
+
+    // Attachment preview
+    document.getElementById('attachInput').addEventListener('change', function() {
+        if (this.files.length > 0) {
+            document.getElementById('attachName').textContent = this.files[0].name;
+            document.getElementById('attachPreview').classList.remove('d-none');
+        }
+    });
+    document.getElementById('attachRemove').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('attachInput').value = '';
+        document.getElementById('attachPreview').classList.add('d-none');
+    });
+
+    // Enter to send
+    document.getElementById('msgInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Delete message handler
+    chatBox.addEventListener('click', function(e) {
+        const btn = e.target.closest('.delete-msg-btn');
+        if (!btn) return;
+        e.preventDefault();
+        const msgId = btn.dataset.msgId;
+        if (!confirm('Delete this message?')) return;
+        fetch(deleteUrl + msgId, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    const bubble = document.querySelector('[data-msg-id="' + msgId + '"]');
+                    if (bubble) bubble.remove();
+                }
+            })
+            .catch(() => {});
+    });
+})();
+</script>
+{% endblock %}

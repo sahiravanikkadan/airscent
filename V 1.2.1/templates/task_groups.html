@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Task Groups - TaskFlow{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-collection"></i> Task Groups</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+        <i class="bi bi-plus-lg"></i> New Group
+    </button>
+</div>
+
+<div class="row g-3">
+    {% for g in groups %}
+    <div class="col-md-4 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="rounded-circle me-2" style="width:16px;height:16px;display:inline-block;background-color:{{ g.color or '#6c757d' }};"></span>
+                    <h6 class="mb-0 flex-grow-1">{{ g.name }}</h6>
+                </div>
+                <p class="text-muted mb-2" style="font-size:0.85rem;">
+                    <i class="bi bi-list-task"></i> {{ g.task_count }} task{{ 's' if g.task_count != 1 }}
+                </p>
+                <small class="text-muted">Created by {{ g.creator_name or 'Unknown' }}</small>
+            </div>
+            <div class="card-footer bg-white border-0 pt-0">
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editGroupModal{{ g.id }}">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                <a href="{{ url_for('delete_task_group', group_id=g.id) }}" class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Delete this group? Tasks in this group will become ungrouped.')">
+                    <i class="bi bi-trash"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal for this group -->
+    <div class="modal fade" id="editGroupModal{{ g.id }}" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('edit_task_group', group_id=g.id) }}">
+                    <div class="modal-header">
+                        <h6 class="modal-title"><i class="bi bi-pencil"></i> Edit Group</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Group Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" value="{{ g.name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Color</label>
+                            <input type="color" name="color" class="form-control form-control-color" value="{{ g.color or '#6c757d' }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center text-muted py-5">
+        <i class="bi bi-collection" style="font-size:3rem;"></i>
+        <p class="mt-2">No task groups yet. Create one to organize your tasks.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Group Modal -->
+<div class="modal fade" id="addGroupModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_task_group') }}">
+                <div class="modal-header">
+                    <h6 class="modal-title"><i class="bi bi-plus-lg"></i> New Task Group</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Group Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Marketing, IT, HR" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Color</label>
+                        <input type="color" name="color" class="form-control form-control-color" value="#0d6efd">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg"></i> Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
